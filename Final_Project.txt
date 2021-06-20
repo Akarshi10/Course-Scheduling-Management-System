@@ -1,0 +1,1192 @@
+-- Setup
+-- Setup
+drop table department cascade constraints;
+drop table program cascade constraints;
+drop table course cascade constraints;
+drop table building cascade constraints;
+drop table classroom cascade constraints;
+drop table instructor cascade constraints;
+drop table timeblock cascade constraints;
+drop table sections cascade constraints;
+drop table schedule cascade constraints;
+drop table student cascade constraints;
+drop table prerequisite cascade constraints;
+drop table student_registration cascade constraints;
+drop table offDays cascade constraints;
+drop table waitlist cascade constraints;
+drop table courseLoad cascade constraints;
+drop table instructorPreference cascade constraints;
+drop table special_permission cascade constraints;
+drop table my_temp_table;
+drop table temp_store;
+drop table temp_score;
+
+drop sequence d_seq;
+drop sequence p_seq;
+drop sequence c_seq;
+drop sequence b_seq;
+drop sequence cr_seq;
+drop sequence i_seq;
+drop sequence t_seq;
+drop sequence sect_seq;
+drop sequence sch_seq;
+drop sequence s_seq;
+drop sequence pr_seq;
+drop sequence sr_seq;
+drop sequence od_seq;
+drop sequence w_seq;
+drop sequence cl_seq;
+drop sequence ip_seq;
+drop sequence sp_seq;
+drop sequence temp_seq;
+
+create table department
+(did int primary key, dname varchar(50));
+
+create table program(pid int primary key,pname varchar(50),ptype int, --1 Undergraduate, 2 Master's and 3 Phd
+did int,
+foreign key (did) references department(did));
+
+create table course(cid int primary key, subject_code varchar(20), cname varchar(50),no_of_credits number,
+grading_format int, -- 1 is Letter and 2 is Pass/ Fail
+required int,  -- 1 is Required and 0 is Elective
+no_of_sections number, student_capacity number,status int, -- 1 is Open and 0 is Closed
+room_type integer, --1 is computer lab and 0 is regular room
+pid int,foreign key(pid) references program(pid));
+
+create table building(bid int primary key,bname varchar(50),did int,
+foreign key(did) references department(did));
+
+create table classroom(rid int primary key,rname varchar(50),no_of_seats number,
+rtype int,  -- 1 is Computer Lab and 0 is Regular Room
+cid int, bid int,
+foreign key (cid) references course(cid),
+foreign key (bid) references building(bid));
+
+create table instructor(i_id int primary key,i_name varchar(50),did int, 
+i_status int, -- 1 is Full Time and 0 is Part Time
+cid int,  -- 1 Monday, 2 Tuesday, 3  Wednesday, 4 Thursday and 5 Friday
+foreign key (cid) references course(cid),
+foreign key (did) references department(did));
+
+
+create table timeblock(tid int primary key,i_id int,start_time interval day to second, 
+end_time interval day to second,
+day1 int, -- 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday, 5 Friday
+day2 int, -- 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday, 5 Friday
+length interval day to second,
+foreign key (i_id) references instructor(i_id));
+
+create table sections(sect_id int primary key, assign_sections int);
+
+create table schedule(sch_id int primary key,
+cid int,sect_id int,i_id int, tid int,rid int,year date, 
+semester int, -- 1 Fall, 2 Winter, 3 Spring, 4 Summer
+wait_list_capacity number,status int, -- 1 Open, 0 Full
+section_size number, 
+foreign key (sect_id) references sections(sect_id),
+foreign key (rid) references classroom(rid),
+foreign key (cid) references course(cid),
+foreign key (i_id) references instructor(i_id),
+foreign key (tid) references timeblock(tid));
+
+create table student(stid int primary key,stname varchar(50),pid int,sch_id int,
+wait_list_position number,
+foreign key (pid) references program(pid),
+foreign key (sch_id) references schedule(sch_id));
+
+create table prerequisite(preid int, cid int, pr_name varchar(50), primary key(preid, cid), 
+foreign key(cid) references course(cid));
+
+create table student_registration(sr_id int, stid int,sch_id int, 
+reg_status int, --1.enrolled, 2. dropped and 0. waitlist
+grade varchar(10),
+primary key(sr_id, stid,sch_id),
+foreign key (stid) references student(stid),
+foreign key (sch_id) references schedule(sch_id));
+
+create table offDays(off_days_id int primary key, i_id int, 
+days int, -- 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday and 5 Friday
+day_2 int, -- 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday, 5 Friday
+foreign key(i_id) references instructor(i_id));
+
+create table waitlist(wait_id int primary key, stid int, sch_id int, pos int,
+foreign key(stid) references student(stid), foreign key(sch_id) references schedule(sch_id));
+
+create table courseLoad(cl_id int primary key, i_id int, no_of_course int, course_load_max_limit number,
+foreign key(i_id) references instructor(i_id));
+
+create table instructorPreference(ins_pref_id int primary key, i_id int, cid int, 
+sections_willing number, day_preference1 int, -- 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday and 5 Friday
+day_preference2 int, -- 1 Monday, 2 Tuesday, 3 Wednesday, 4 Thursday and 5 Friday
+foreign key(i_id) references instructor(i_id),
+foreign key(cid) references course(cid));
+
+create table special_permission(sp_id int primary key, sch_id int, stid int, 
+type_per int, -- 1. enroll in closed class, 2. enroll without prerequisite
+foreign key(sch_id) references schedule(sch_id), foreign key(stid) references student(stid));
+
+create global temporary table my_temp_table (temp_id integer primary key, 
+no_of_instructors number, no_of_sections_willing number, course_load number, 
+weight number);
+
+create table temp_store (temp_store_id integer, no_of_instructors integer, no_of_sections_willing integer, 
+course_load integer, weight integer);
+
+create table temp_score (room_score int, timeblock_score int, total int, room_id int, timeblock_id int);
+
+create sequence d_seq start with 1;
+create sequence p_seq start with 1;
+create sequence c_seq start with 1;
+create sequence b_seq start with 1;
+create sequence cr_seq start with 1;
+create sequence i_seq start with 1;
+create sequence t_seq start with 1;
+create sequence sect_seq start with 1;
+create sequence sch_seq start with 1;
+create sequence s_seq start with 1;
+create sequence pr_seq start with 1;
+create sequence sr_seq start with 1;
+create sequence od_seq start with 1;
+create sequence w_seq start with 1;
+create sequence cl_seq start with 1;
+create sequence ip_seq start with 1;
+create sequence sp_seq start with 1;
+create sequence temp_seq start with 1;
+
+insert into department values(d_seq.nextval, 'Information Systems');
+insert into department values(d_seq.nextval, 'Computer Science');
+insert into department values(d_seq.nextval, 'Data Science');
+insert into department values(d_seq.nextval, 'Mechanical Engineering');
+insert into department values(d_seq.nextval, 'Engineering Management');
+insert into department values(d_seq.nextval, 'Physics');
+
+select * from department;
+
+insert into program values(p_seq.nextval, 'BS Program', 1, 1);
+insert into program values(p_seq.nextval, 'MS Program', 2, 1);
+insert into program values(p_seq.nextval, 'PHD Program', 3, 1);
+insert into program values(p_seq.nextval, 'BS Program', 1, 2);
+insert into program values(p_seq.nextval, 'MS Program', 2, 2);
+insert into program values(p_seq.nextval, 'PHD Program', 3, 2);
+
+select * from program;
+
+insert into  course values(c_seq.nextval, 'IS458', 'Software and Hardware concepts', 3, 1, 1, 3, 30, 1, 1, 1);
+insert into  course values(c_seq.nextval, 'IS420', 'Database Application Development', 3, 1, 1, 3, 40, 1, 0, 1);
+insert into  course values(c_seq.nextval, 'IS620', 'Advance Database Project', 3, 1, 1, 3, 30, 1, 1, 2);
+insert into  course values(c_seq.nextval, 'IS733', 'Datamining', 3, 1, 0, 3, 30, 0, 0, 2);
+insert into  course values(c_seq.nextval, 'IS845', 'Proposal Defense', 3, 1, 1, 3, 30, 1, 1, 3);
+insert into  course values(c_seq.nextval, 'IS860', 'Dissertation Defense', 3, 1, 1, 3, 30, 1, 0, 3);
+
+select * from course;
+
+insert into building values(b_seq.nextval, 'Public Policy',3 );
+insert into building values(b_seq.nextval, 'IT Building', 1);
+insert into building values(b_seq.nextval, 'Physics', 6);
+insert into building values(b_seq.nextval, 'Math Building', 2);
+insert into building values(b_seq.nextval, 'Engineering Building', 5);
+insert into building values(b_seq.nextval, 'Chemistry Building', 4);
+
+select * from building;
+
+insert into classroom values(cr_seq.nextval, 'PP206', 40, 0, 1, 1);
+insert into classroom values(cr_seq.nextval, 'IT229', 50, 0, 2, 2);
+insert into classroom values(cr_seq.nextval, 'PHY123', 35, 1, 5, 3);
+insert into classroom values(cr_seq.nextval, 'MH345', 45, 0, 6, 4);
+insert into classroom values(cr_seq.nextval, 'EN223', 60, 0, 4, 5);
+insert into classroom values(cr_seq.nextval, 'CH456', 30, 1, 3, 6);
+
+select * from classroom;
+
+insert into instructor values(i_seq.nextval,'Dr.Chen', 1, 1, 3);
+insert into instructor values(i_seq.nextval,'Dr. Aaron Massey', 6, 1, 4);
+insert into instructor values(i_seq.nextval,'Dr.Sisi Duan', 3, 1,  5);
+insert into instructor values(i_seq.nextval,'Dr.Crabtree', 2, 0,  6);
+insert into instructor values(i_seq.nextval,'Dr.Michael', 4, 1,  1);
+insert into instructor values(i_seq.nextval,'Dr.Karabaitis', 5, 0,  2);
+
+select * from instructor;
+
+insert into timeblock values(t_seq.nextval,1, interval '4:30' hour to minute,interval '7:00' hour to minute ,
+4, NULL,interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,2, interval '2:00' hour to minute,interval '3:15' hour to minute ,
+1,NULL interval '1:15' hour to minute);
+insert into timeblock values(t_seq.nextval,2, interval '2:00' hour to minute,interval '3:15' hour to minute ,
+NULL,3, interval '1:15' hour to minute);
+insert into timeblock values(t_seq.nextval,3, interval '2:00' hour to minute,interval '4:30' hour to minute ,
+2, NULL,interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,4, interval '4:30' hour to minute, interval '4:30' hour to minute, 
+NULL,3, interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,3, interval '4:30' hour to minute,interval '7:00' hour to minute ,
+NULL,2, interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,5, interval '4:30' hour to minute,interval '7:00' hour to minute ,
+NULL,5, interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,6, interval '2:00' hour to minute,interval '4:30' hour to minute, 
+2,NULL, interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,1, interval '2:00' hour to minute,interval '4:30' hour to minute 
+3,NULL, interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval,4, interval '2:00' hour to minute,interval '4:30' hour to minute,
+NULL, 4, interval '2:30' hour to minute);
+insert into timeblock values(t_seq.nextval, 6,interval '2:00' hour to minute,interval '4:30' hour to minute,
+5,NULL, interval '2:30' hour to minute);
+
+select * from timeblock;
+
+insert into sections values(sect_seq.nextval, 1);
+insert into sections values(sect_seq.nextval, 2);
+insert into sections values(sect_seq.nextval, 1);
+insert into sections values(sect_seq.nextval, 3);
+insert into sections values(sect_seq.nextval, 1);
+insert into sections values(sect_seq.nextval, 1);
+
+select * from sections;
+
+insert into schedule values(sch_seq.nextval,1,1,1,1,1, date '2019-08-28', 1, 10, 1, 30);
+insert into schedule values(sch_seq.nextval,2,2,2,2,2, date '2020-01-02', 2, 9, 0, 30);
+insert into schedule values(sch_seq.nextval,3,3,3,3,3, date '2020-01-28', 3, 8, 1, 30);
+insert into schedule values(sch_seq.nextval,4,4,4,4,4, date '2020-05-25', 4, 7, 0, 30);
+insert into schedule values(sch_seq.nextval,5,5,5,1,5, date '2019-08-28', 1, 6, 1, 30);
+insert into schedule values(sch_seq.nextval,6,6,6,2,6, date '2019-12-10', 2, 5, 0, 30);
+insert into schedule values(sch_seq.nextval,1,1,1,null,null, date '2019-08-28', 1, 10, 1, 30);
+insert into schedule values(sch_seq.nextval,1,1,1,null,null, date '2019-08-28', 1, 7, 1, 30);
+
+select * from schedule;
+
+insert into student values(s_seq.nextval, 'Jack', 1, 1, 6);
+insert into student values(s_seq.nextval, 'Lisa', 2, 2, 5);
+insert into student values(s_seq.nextval, 'Susan', 3, 3, 4);
+insert into student values(s_seq.nextval, 'Bob', 4, 4, 3);
+insert into student values(s_seq.nextval, 'Steve', 5, 5, 2);
+insert into student values(s_seq.nextval, 'Jeff', 6, 6, 1);
+
+select * from student;
+
+insert into prerequisite values(pr_seq.nextval, 1, NULL);
+insert into prerequisite values(pr_seq.nextval, 2, 'Basic Database Concepts');
+insert into prerequisite values(pr_seq.nextval, 3, 'Database Application Development');
+insert into prerequisite values(pr_seq.nextval, 4, 'Advance Database');
+insert into prerequisite values(pr_seq.nextval, 5, NULL);
+insert into prerequisite values(pr_seq.nextval, 6, 'Proposal Defense');
+
+select * from prerequisite;
+
+insert into student_registration values(sr_seq.nextval, 1, 2, 0, 'A');
+insert into student_registration values(sr_seq.nextval, 2, 3, 1, 'A');
+insert into student_registration values(sr_seq.nextval, 3, 5, 2,'A');
+insert into student_registration values(sr_seq.nextval, 4, 6, 2,'A');
+insert into student_registration values(sr_seq.nextval, 5, 1, 0, 'A');
+insert into student_registration values(sr_seq.nextval, 6, 4, 1, 'D');
+
+select * from student_registration;
+
+insert into offDays values(od_seq.nextval, 1, 2, 4);
+insert into offDays values(od_seq.nextval, 2, 4, 1);
+insert into offDays values(od_seq.nextval, 3, 1, 5);
+insert into offDays values(od_seq.nextval, 4, 5, 2);
+insert into offDays values(od_seq.nextval, 5, 3, null);
+insert into offDays values(od_seq.nextval, 6, 4, null);
+
+select * from offDays;
+
+insert into waitlist values(w_seq.nextval, 1, 2, 10);
+insert into waitlist values(w_seq.nextval, 2, 3, 9);
+insert into waitlist values(w_seq.nextval, 3, 5, 8);
+insert into waitlist values(w_seq.nextval, 4, 6, 7);
+insert into waitlist values(w_seq.nextval, 5, 1, 6);
+insert into waitlist values(w_seq.nextval, 6, 4, 5);
+
+select * from waitlist;
+
+insert into courseLoad values(cl_seq.nextval,6, 1, 5);
+insert into courseLoad values(cl_seq.nextval, 4,1, 5);
+insert into courseLoad values(cl_seq.nextval, 5, 1, 5);
+insert into courseLoad values(cl_seq.nextval,3, 1, 5);
+insert into courseLoad values(cl_seq.nextval, 2, 2, 5);
+insert into courseLoad values(cl_seq.nextval,1, 3, 5);
+
+select * from courseLoad;
+
+insert into instructorPreference values(ip_seq.nextval, 1, 6, 2, 1, 3);
+insert into instructorPreference values(ip_seq.nextval, 2, 5, 1, 3, 5);
+insert into instructorPreference values(ip_seq.nextval, 3, 4, 3, 4, 5);
+insert into instructorPreference values(ip_seq.nextval, 4, 3, 2, 1, 2);
+insert into instructorPreference values(ip_seq.nextval, 5, 2, 1, 2, 4);
+insert into instructorPreference values(ip_seq.nextval, 6, 1, 3, 2, 3);
+insert into instructorPreference values(ip_seq.nextval, 1, 5, 3, 1, 3);
+insert into instructorPreference values(ip_seq.nextval, 2, 3, 1, 3, 5);
+insert into instructorPreference values(ip_seq.nextval, 3, 1, 2, 4, 5);
+insert into instructorPreference values(ip_seq.nextval, 4, 2, 2, 1, 2);
+insert into instructorPreference values(ip_seq.nextval, 5, 6, 2, 2, 4);
+insert into instructorPreference values(ip_seq.nextval, 6, 4, 1, 2, 3);
+
+select * from instructorPreference;
+
+
+insert into special_permission values(sp_seq.nextval, 5, 4, 2);
+insert into special_permission values(sp_seq.nextval, 6, 3, 1);
+insert into special_permission values(sp_seq.nextval, 1, 1, 2);
+insert into special_permission values(sp_seq.nextval, 2, 6, 1);
+insert into special_permission values(sp_seq.nextval, 3, 5, 2);
+insert into special_permission values(sp_seq.nextval, 4, 2, 1);
+
+select * from special_permission;
+
+
+Features-
+-- Feature 1
+SET SERVEROUTPUT ON;
+CREATE OR REPLACE PROCEDURE ADD_COURSE( 
+C_NAME IN COURSE.CNAME%TYPE,
+N_CRED IN COURSE.NO_OF_CREDITS%TYPE,
+GRADING IN COURSE.GRADING_FORMAT%TYPE,
+REQ IN COURSE.REQUIRED%TYPE,
+N_SEC IN COURSE.NO_OF_SECTIONS%TYPE,
+RTYPE IN COURSE.ROOM_TYPE%TYPE,
+P_ID IN COURSE.PID%TYPE
+)
+IS
+V_COUNT INT;
+BEGIN
+SELECT COUNT(*) INTO V_COUNT FROM COURSE WHERE CNAME=C_NAME;
+IF V_COUNT=0 THEN
+INSERT INTO COURSE(CID, SUBJECT_CODE, CNAME, NO_OF_CREDITS, GRADING_FORMAT, REQUIRED, NO_OF_SECTIONS, 
+Student_capacity, STATUS, ROOM_TYPE, PID) 
+VALUES(C_SEQ.NEXTVAL, '2', C_NAME, N_CRED, GRADING, REQ, N_SEC, 40, 1, RTYPE, P_ID);
+dbms_output.put_line(c_seq.currval);
+ELSE
+UPDATE COURSE 
+SET CNAME=C_NAME, PID = P_ID, NO_OF_CREDITS= N_CRED, GRADING_FORMAT= GRADING, REQUIRED=REQ, 
+ROOM_TYPE=RTYPE, NO_OF_SECTIONS=N_SEC  
+where CNAME = C_NAME;
+END IF;
+EXCEPTION 
+WHEN NO_DATA_FOUND THEN
+DBMS_OUTPUT.PUT_LINE('NO DATA FOUND');
+END;
+/
+EXEC ADD_COURSE('ANALYSIS', 3, 1, 1, 3, 1, 1);
+
+/
+-- Feature 2
+set serveroutput on;
+create or replace procedure add_instructor(v_name in instructor.i_name%type, v_did in instructor.did%type, 
+v_type in instructor.i_status%type, c_cid instructor.cid%type)
+is
+v_count int;
+v_id int;
+begin
+select count(*) into v_count from instructor where i_name = v_name and i_status = v_type;
+if v_count =  1 then
+select i_id into v_id from instructor where i_name = v_name and i_status = v_type;
+dbms_output.put_line('Instructor Already Exists');
+else
+insert into instructor values(i_seq.nextval, v_name, v_did, v_type, c_cid);
+dbms_output.put_line(i_seq.currval);
+end if;
+exception
+when no_data_found then
+dbms_output.put_line('No Data Found');
+end;
+/
+exec add_instructor('Dr. Vandana', 3, 0, 2);
+
+/
+-- Feature 3
+set serveroutput on;
+Create or replace procedure studentcourse_schedule(
+iid in instructor.i_id%type,
+year in schedule.year%type,
+semester in schedule.semester%type,
+ciid in course.cid%type,
+no_of_sections in course.no_of_sections%type,
+Off_Days in offdays.day_2%type
+)
+is
+v_count1 number;
+v_count2 number;
+v_count3 number;
+v_count4 number;
+v_count5 number;
+begin
+select count(*) into v_count3 from instructor where i_id=iid;
+select count(*) into v_count1 from courseload where i_id=iid;
+select count(*) into v_count2 from instructorpreference where cid=ciid and i_id=iid;
+select count(*) into v_count4 from offdays where i_id=iid and days is not null and day_2 is not null;
+select count(*) into v_count5 from offdays where i_id=iid and days is not null and day_2 is null;
+if v_count3>0 then
+    if ciid is not null then
+        if v_count4>=1 then 
+            dbms_output.put_line('the number of blackout days is over two');
+        else
+            update offdays set day_2=Off_Days where i_id = iid;
+            insert into schedule values(sch_seq.nextval,ciid,null,iid,null,null, year, semester, null, null, null);      
+        end if;   
+    else
+        dbms_output.put_line('Enter valid course');
+    end if;  
+else
+    dbms_output.put_line('invalid instructor id');
+end if;
+END;
+/
+exec studentcourse_schedule(4,date'28-08-19',2,3,1,2);
+exec studentcourse_schedule(1,date'28-08-19',2,3,1,1);
+exec studentcourse_schedule(9,date'28-08-19',2,3,1,1);
+
+/
+
+-- Feature 4
+set serveroutput on;
+create or replace procedure search_course(v_year in schedule.year%type,
+v_sem in schedule.semester%type, v_pid in course.pid%type)
+is
+cursor c1 is select cname, no_of_credits, grading_format, sch_id, sect_id, i_name,
+rname, day1, day2, start_time, end_time,c.status --status checks if the course if open or full
+from schedule sc, course c, instructor i, timeblock tb,program p,
+classroom cr where sc.cid = c.cid and sc.i_id = i.i_id and tb.i_id = i.i_id and sc.rid = cr.rid and c.pid = p.pid
+and sc.year = v_year and sc.semester = v_sem and p.pid= v_pid
+order by c.cid, sc.sect_id;    --results the order by course id and section number
+v_name course.cname%type;
+v_noc course.no_of_credits%type;
+v_gf course.grading_format%type;
+v_id schedule.sch_id%type;
+v_secid schedule.sect_id%type;
+v_iname instructor.i_name%type;
+v_rname classroom.rname%type;
+v_day1 timeblock.day1%type;
+v_day2 timeblock.day2%type;
+v_st timeblock.start_time%type;
+v_et timeblock.end_time%type;
+v_status course.status%type;
+c_pid program.pid%type;
+begin
+select pid into c_pid from program where pid = v_pid;
+ --check if the program id is valid
+		 if c_pid >= 1 then 
+open c1;
+loop
+fetch c1 into v_name, v_noc, v_gf, v_id, v_secid, v_iname, v_rname, v_day1, v_day2, v_st, v_et, v_status;
+exit when c1%notfound;
+dbms_output.put_line(v_name ||', '||'Number of credits= ' || v_noc ||', '|| 'Grading Format= ' || v_gf ||', '|| 'Schedule ID= ' || v_id ||', '||'Section ID= ' ||  v_secid ||', '||'Instrutor Name= ' ||  v_iname ||', '||
+'Room name= ' || v_rname || ', '|| 'Day1= ' ||v_day1 ||', '|| 'Day2= '||v_day2 ||', '|| 'Start time= '|| v_st ||', '|| 'End time= '|| v_et ||', '||'Status= '||
+v_status);
+end loop;
+else
+dbms_output.put_line('invalid program id');
+end if;
+end;
+/
+exec search_course(date '2019-08-28', 1, 1);
+
+/
+
+-- Feature 5
+set serveroutput on;
+--creating the procedure having the join from instructor and course table
+create or replace procedure compute3 is
+cursor c1 is select count(c.cname) from instructor i,course c where c.cid=i.cid and i.i_name='Dr.Chen'; 
+required_id instructor.i_id%type;
+c_name course.cid%type;
+begin
+open c1;
+loop
+fetch c1 into c_name;
+exit when c1%notfound;
+--update courseload by executing subquery
+update courseload set no_of_course=(select count(cname) from course c, instructor i where c.cid=i.cid and i.i_name='Dr.Chen')
+where courseload.i_id=(select i_id from instructor where i_name='Dr.Chen');
+end loop;
+end;
+/
+exec compute3;
+
+/
+
+-- Feature 6
+set serveroutput on;
+create or replace procedure assign_instructors (c_id in schedule.cid%type, c_year in schedule.year%type, 
+c_sem in schedule.semester%type)
+is 
+cursor c1 is select se.assign_sections from sections se, schedule sc where se.sect_id = sc.sect_id and 
+sc.cid = c_id and sc.year = c_year and sc.semester = c_sem;
+cursor c2 is select ip.i_id, ip.sections_willing from instructorPreference ip, schedule sc where sc.i_id = ip.i_id and
+sc.cid = c_id and sc.year = c_year and sc.semester = c_sem;
+cursor c3 is select temp_id, no_of_instructors, no_of_sections_willing, course_load, weight from my_temp_table;
+cursor c4 is select no_of_instructors from temp_store order by weight desc;
+cursor c5 is select no_of_instructors, weight from temp_store where weight in 
+(select max(weight) from temp_store group by weight);
+cursor c6 is select i.i_id, count(i.cid) from instructor i, schedule sc where sc.i_id = i.i_id and
+sc.year = c_year and sc.semester = c_sem group by i.cid, i.i_id;
+a_sections integer;
+v_iid integer;
+v_secw integer;
+v_noc integer;
+v_sec integer;
+una_sections integer;
+weightage integer;
+x integer;
+a integer;
+b integer;
+c integer;
+d integer;
+e integer;
+f integer;
+v_nf integer;
+v_mw integer;
+v_se integer;
+p_id integer;
+p_cid integer;
+v_size integer;
+v_cap integer;
+begin
+for i in c1
+loop
+a_sections := i.assign_sections;             -- assigned sections to a particular course intially
+end loop;
+select no_of_sections into v_sec from course c, schedule sc where sc.cid = c.cid and 
+c.cid = c_id and sc.year = c_year and sc.semester = c_sem;
+if (v_sec = a_sections) then                 -- comparing number of sections of course with assigned sections of course
+dbms_output.put_line('there are no enough sections left');
+else
+select cl.no_of_course into v_noc from courseLoad cl, schedule sc where sc.i_id = cl.i_id
+and sc.cid = c_id and sc.year = c_year and sc.semester = c_sem;
+una_sections := v_sec - a_sections;              -- finding unassigned sections for a course
+dbms_output.put_line('unassigned sections = ' || una_sections);
+for j in c2
+loop
+v_iid := j.i_id;
+v_secw := j.sections_willing;     -- instructor preference for number of sections
+end loop;
+x := v_noc - a_sections;
+dbms_output.put_line('difference = ' || x);
+if v_secw >= una_sections then
+weightage := una_sections * x;        -- calculatinng instructor weightage
+dbms_output.put_line('weightage = ' || weightage);
+else
+weightage := v_secw * x;              -- calculatinng instructor weightage
+dbms_output.put_line('weightage = ' || weightage);
+end if;
+insert into my_temp_table values(TEMP_SEQ.nextval, v_iid, v_secw, v_noc, weightage);
+for k in c3
+loop
+a := k.temp_id;
+b := k.no_of_instructors;
+c := k.no_of_sections_willing;
+d := k.course_load;
+e := k.weight;
+end loop;
+insert into temp_store(temp_store_id, no_of_instructors,  no_of_sections_willing, course_load, weight)   -- storing temporary values
+values(a, b, c, d, e);
+for l in c4
+loop
+f := l.no_of_instructors;
+end loop;
+dbms_output.put_line('instructors =  ' || f);
+for m in c5
+loop
+v_nf := m.no_of_instructors;
+v_mw := m.weight;
+end loop;
+dbms_output.put_line('instructor id=  ' || v_nf || ' weight =  ' || v_mw);
+open c6;
+loop
+fetch c6 into p_id, p_cid;
+exit when c6%notfound;
+dbms_output.put_line('instructor id =  ' || p_id || ' number of course =  ' || p_cid);
+end loop;
+if p_cid <= v_noc then
+select se.sect_id into v_se from sections se, schedule sc where sc.sect_id = se.sect_id and 
+sc.cid = c_id and sc.year = c_year and sc.semester = c_sem;
+select student_capacity into v_cap from course c, schedule sc where sc.cid = c.cid and 
+c.cid = c_id and sc.year = c_year and sc.semester = c_sem;
+select section_size into v_size from schedule where cid = c_id and 
+year = c_year and semester = c_sem;
+if v_size <= v_cap then
+insert into schedule(sch_id, cid, sect_id, i_id, wait_list_capacity) 
+values(SCH_SEQ.nextval, c_id, v_se, v_nf,10);
+update sections set assign_sections = a_sections + 1 where sect_id = v_se;
+dbms_output.put_line(' updated assign sections =  ' || a_sections);
+else
+dbms_output.put_line('section size is full');
+end if;
+else
+dbms_output.put_line('instructors are not available');
+end if;
+end if;
+exception
+when  no_data_found then
+dbms_output.put_line('no data found');
+end;
+/
+exec assign_instructors(5, date '2019-08-28', 1);
+/
+exec assign_instructors(3, date '2020-01-28', 3);
+/
+exec assign_instructors(4, date '2020-05-25', 4);
+
+/
+
+--Feature 7
+set serveroutput on;
+create or replace procedure assign_course(year_input in date,sem_input number)
+is
+cursor c1 is
+select c.cid,i.i_id from department d,program p,course c,instructor i
+where d.did=p.did and p.pid=c.pid and
+c.required=1 and i.did=d.did ;
+cursor c2 is select c.cid, i.i_id from department d,program p,course c,instructor i
+where d.did=p.did and p.pid=c.pid and
+c.required=0 and i.did=d.did;
+c_id int;
+i_id1 int;
+c2_id int;
+i_id2 int;
+c_load int;
+l_var int;
+t_var int;
+final_check int;
+c_load_final int;
+begin
+
+open c1;
+loop 
+fetch c1 into c_id,i_id1;
+exit when c1%notfound;
+assign_instructors(c_id, year_input, sem_input); 
+SELECT Count(i_id) INTO l_var  FROM schedule WHERE i_id = i_id1;
+if l_var< t_var then
+open c2;
+loop
+fetch c2 into  c2_id, i_id2;
+exit when c2%notfound;
+assign_instructors(c2_id,year_input,sem_input);
+SELECT Count(i_id) INTO final_check FROM schedule WHERE i_id = i_id1;
+--            GROUP  BY cid;
+SELECT course_load_max_limit INTO c_load_final FROM courseload WHERE i_id = i_id1;
+if final_check <c_load_final
+then
+dbms_output.put_line('this instructor still did not match course load and id is'||i_id2);
+
+end if;
+end loop;
+close c2;
+end if;
+end loop;
+close c1;
+end;
+/
+exec assign_course(date '2019-08-28', 1);
+
+
+/
+
+-- Feature 8
+set serveroutput on;
+create or replace procedure assign_room(v_sch_id int) --input as sschedule id
+as
+count_student int;
+count_schedule int;
+tb_id schedule.tid%type;
+r_id schedule.rid%type;
+d1 offdays.days%type;
+s_time timeblock.start_time%type;
+leng timeblock.length%type;
+grad_prog program.ptype%type;
+room_id classroom.rid%type;
+room_type course.room_type%type;
+a_count int;
+aa_count int;
+minimum_total_score int;
+f_rid schedule.rid%type;
+f_tbid schedule.tid%type;
+cursor c1 is select c.rid from schedule s, classroom c where s.sch_id = v_sch_id and s.section_size <= c.NO_OF_SEATS; --For classroom id
+cursor c2 is select t.tid from timeblock t, schedule s where s.sch_id = v_sch_id and s.i_id = t.i_id; --For tmeblock id
+begin
+    select count(*) into count_schedule from schedule where sch_id = v_sch_id;
+    if count_schedule = 0 then -- For invalid id
+        dbms_output.put_line('Invalid Schedule ID');
+    else
+        select tid, rid into tb_id, r_id from schedule s where s.sch_id = v_sch_id;
+        if tb_id is not null and r_id is not null then --For already assigned course
+            dbms_output.put_line('Already course assigned' || tb_id  || '-----' || r_id);
+        else
+            dbms_output.put_line('register' || tb_id  || '-----' || r_id);
+           
+            select days into d1 from offdays p, schedule s where s.i_id = p.i_id and s.sch_id = v_sch_id;
+            if d1 is null then --offday condition for profssor black out day
+            dbms_output.put_line(' Instructor black out days' || d1);
+           else
+           dbms_output.put_line(' Instructor is available' || d1);
+            select p.ptype into grad_prog from course c, program p, schedule s where 
+            s.cid = c.cid and c.pid = p.pid and s.sch_id = v_sch_id; --Grad prog condition
+            if grad_prog = 2 then
+                dbms_output.put_line(' Its a graduate program'); 
+            else
+                dbms_output.put_line(' Its not a graduate program');
+            end if;
+            open c1;
+            loop
+            fetch c1 into room_id; --fetch room id
+            exit when c1%notfound;
+            dbms_output.put_line('room id : '||room_id);
+            select count(*) into a_count from schedule where rid = room_id;
+            dbms_output.put_line('room score count : '||a_count);
+            insert into temp_score(room_score, room_id) values (a_count, room_id);
+            end loop;
+            close c1;            
+            open c2;
+            loop
+            fetch c2 into tb_id; --fetch timeblock id
+            exit when c2%notfound;
+            dbms_output.put_line('timeblock id : '||tb_id);
+            select count(*) into aa_count from schedule where tid = tb_id;
+            dbms_output.put_line('time block score count : '||aa_count);
+            update temp_score set timeblock_score = aa_count;
+            update temp_score set timeblock_id = tb_id;
+            end loop;
+            close c2;
+            update temp_score set total = room_score * timeblock_score; --calculate score
+            select c.room_type into room_type from course c, schedule s where s.sch_id = 1 and c.cid = s.cid; --computer room condition
+            if room_type = 1 then
+                dbms_output.put_line('computer room required');
+            else
+                dbms_output.put_line('computer room  not required');
+            end if;
+            SELECT total, room_id, timeblock_id into minimum_total_score, f_rid, f_tbid FROM temp_score 
+			WHERE total =(SELECT MIN(total) FROM  temp_score) and rownum = 1; --select minimum total for final assignment of roomid and timeblock id
+           dbms_output.put_line('score : ' || minimum_total_score || ', Final Room id : ' || f_rid 
+           || ', final timeblock id : ' || f_tbid);
+           update schedule set tid  = f_tbid, rid = f_rid where sch_id = v_sch_id; --update schedule table with the score
+        end if;
+    end if;
+    end if;
+end;  
+/
+exec assign_room(12);
+
+/
+
+-- Feature 9
+set serveroutput on;
+create or replace procedure assign_rooms_tb(v_dept department.did%type,
+v_year in schedule.year%type,v_sem in schedule.semester%type)
+is
+cursor c1 is select sc.sect_id, i.did, sc.year, sc.semester, sc.sch_id from schedule sc, instructor i 
+where sc.i_id = i.i_id and i.did = v_dept and sc.year = v_year and sc.semester = v_sem;
+cursor c2 is select p.ptype from program p, schedule sc, course c where p.pid = c.pid and 
+sc.cid = c.cid and p.did = v_dept and sc.year = v_year and sc.semester = v_sem;
+p integer;
+q integer;
+r date;
+s integer;
+t integer;
+e integer;
+v_pty integer;
+a integer;
+begin
+
+for k in c1
+loop
+p := k.sect_id;
+q := k.did;
+r := k.year;
+s := k.semester;
+t := k.sch_id;
+end loop;
+for l in c2
+loop
+a := l.ptype;
+end loop;
+--checks for the graduate courses
+if v_pty = 2 then
+if e !=0 then
+assign_room(e);
+else
+dbms_output.put_line('invalid schedule id');
+end if;
+end if;
+--checks for the undergraduate courses
+if v_pty = 1 then
+if e !=0 then
+assign_room(e);
+else
+dbms_output.put_line('invalid schedule id');
+end if;
+end if;
+end;
+/
+exec assign_rooms_tb(1, date '2019-08-28', 1);
+
+/
+
+-- Feature 10
+set serveroutput on;
+create or replace procedure compute1(student_id int, sche_id int)
+as
+v_student_count int;
+v_schedule_count int;
+begin
+--finding the value for the studentid and scheduleid is valid or not 
+    select count(*) into v_student_count from student where stid = student_id;
+    select count(*) into v_schedule_count from schedule where sch_id = sche_id;
+    if v_student_count = 0  then
+        dbms_output.put_line('Invalid Student ID or Schedule ID');
+    elsif v_schedule_count = 0 then
+        dbms_output.put_line('Invalid Student ID or Schedule ID');
+    else
+        dbms_output.put_line('valid id');
+	--insert the value in special permission table
+        insert into special_permission values (sp_seq.nextval, student_id, sche_id, 1);
+    end if;      
+end;
+/
+exec compute1(6,3);
+
+/
+
+-- Feature 11
+set serveroutput on;
+create or replace function check_prerequisite(v_schid in integer, v_stid in integer) 
+return integer 
+is 
+v_id integer;
+v_count integer;
+begin
+select count(*) into v_count from schedule sc, student s where sc.sch_id = s.sch_id and 
+sc.sch_id = v_schid and s.stid = v_stid;
+if v_count >= 1 then
+select stid into  v_id from student s, prerequisite pr, schedule sc where 
+s.sch_id = sc.sch_id and sc.cid = pr.cid and sc.sch_id = v_schid and s.stid = v_stid;
+return 1;
+else 
+dbms_output.put_line('invalid schedule id');
+return 0;
+end if;
+exception
+when no_data_found then
+dbms_output.put_line('no such employee');
+end;
+/
+declare
+v_id integer;
+begin
+v_id := check_prerequisite(2, 8);
+dbms_output.put_line(v_id);
+end;
+
+/
+
+-- Feature 12
+set serveroutput on;
+create or replace procedure add_schedule(input_student_id student.stid%type,input_schedule_id schedule.sch_id%type)
+IS
+v_valid_student_id student.stid%type;
+v_valid_schedule_id schedule.sch_id%type;
+v_section_id schedule.sect_id%type;
+v_course_id course.cid%type;
+v_r_status student_registration.reg_status%type;
+v_type_of_permission special_permission.type_per%type;
+v_type_of_permission_1  special_permission.type_per%type;
+v_class_capacity classroom.no_of_seats%type;
+v_section_size course.student_capacity%type;
+v_wait_list waitlist.pos%type;
+v_grade student_registration.grade%type;
+v_status schedule.status%type; 
+Begin
+select count(*) into v_valid_student_id from student where stid = input_student_id;
+select count(*) into v_valid_schedule_id from schedule where sch_id = input_schedule_id;
+
+select cid into v_course_id from schedule where sch_id = input_schedule_id;
+if v_valid_student_id != 0 and  v_valid_schedule_id != 0 then
+    Select sect_id into v_section_id from schedule where sch_id = input_schedule_id ;
+    select grade into v_grade from student_registration sr , schedule s 
+    where sr.sch_id = s.sch_id and s.sect_id = v_section_id and rownum=1;
+    If v_grade = 'A' then
+        Select reg_status into v_r_status from student_registration, schedule, prerequisite 
+        where student_registration.stid = input_student_id 
+        and schedule.sect_id  = ( select preid from prerequisite where 
+        cid = (Select cid from schedule where sch_id = input_schedule_id)) and 
+        prerequisite.cid = schedule.sect_id ;
+        select sp_id into v_type_of_permission  from special_permission p ,
+        schedule s, waitlist w, student st, course c
+        where  p.stid = st.stid  and c.cid = s.cid and w.stid = st.stid
+        and w.stid =   input_student_id 
+        and  w.sch_id = input_schedule_id and rownum = 1;
+            If v_type_of_permission  = 2 then 
+            select status  into v_status from schedule
+            where sect_id = (Select sect_id from schedule  
+                                      where sch_id = input_schedule_id);
+                if v_status =  1 
+                then 
+                    select sp_id into v_type_of_permission  from special_permission p , 
+                    schedule s, waitlist w, student st, course c
+                    where  p.stid = st.stid and c.cid = s.cid and w.stid = st.stid
+                    and w.stid =   input_student_id 
+                    and w.sch_id =   input_schedule_id;
+                    If v_type_of_permission_1 =  1
+                    then
+                        insert into student_registration values (od_seq.nextval,input_student_id,
+                        v_section_id ,v_status, null);
+
+                        select count(*) into v_class_capacity from student_registration r, 
+                        schedule s where r.sch_id = s.sch_id and sect_id = (select sect_id from schedule 
+                        where sch_id = input_schedule_id) and reg_status = 1;
+                        select student_capacity into v_section_size from course c, 
+                        schedule s where c.cid = s.cid and sch_id=input_schedule_id ;
+                        If  v_class_capacity = v_section_size 
+                        then 
+                            update schedule set status = 0
+                            where sect_id = (select sect_id from schedule
+                                            where sch_id=input_schedule_id);
+                            select count(*) into v_wait_list from waitlist w, schedule s 
+                            where w.sch_id = s.sch_id and w.sch_id = input_schedule_id;
+                                If v_wait_list <10 
+                                then 
+                                    update waitlist
+                                    set pos = (select max(pos)from waitlist
+                                    where sch_id = input_schedule_id)
+                                    where sch_id = input_schedule_id;
+                                else 
+                                dbms_output.put_line('waitlist is full ');
+                        end if;
+                    end if ;
+                    else 
+    dbms_output.put_line('No need of pre requisite');
+                end if;
+                else 
+    dbms_output.put_line('Already class is Full');
+            end if;
+            else 
+    dbms_output.put_line('No special Permission');
+        end if;
+        else 
+    dbms_output.put_line('Already enrolled for the class because of grade D');
+    end if;   
+else 
+    dbms_output.put_line('Invalid Student or Schedule');
+end if;
+end;
+/
+exec add_schedule (15,2);
+/
+exec add_schedule (1,2);
+/
+exec add_schedule (6,4);
+
+/
+
+-- Feature 13
+set serveroutput on;
+create or replace procedure compu(student_id int, sche_id int)
+as
+v_student_count int;
+v_schedule_count int;
+studentreg int;
+registrationstatus int;
+c int;
+p int;
+--pos int;
+studentid int;
+scheduleid int;
+wait int;
+course_count int;
+j int;
+k int;
+l int;
+sid int;
+scid int;
+--cursor c1 is select position
+begin
+    --checking that studentid and scheduleid is valid or not
+    select count(*) into v_student_count from student where stid = student_id;
+    select count(*) into v_schedule_count from schedule where sch_id = sche_id;
+    if v_student_count = 0  then
+        dbms_output.put_line('Invalid Student ID or Schedule ID');
+    elsif v_schedule_count = 0 then
+        dbms_output.put_line('Invalid Student ID or Schedule ID');
+    else
+	--checking that the student is registered or not
+        select count(*) into studentreg from student_registration s where s.stid = student_id;
+        if studentreg=0 then
+            dbms_output.put_line('Not registered');   
+        else
+	    --checking the registration status for the student
+            select s.reg_status into registrationstatus from student_registration s 
+            where s.stid = student_id and s.sch_id = sche_id;
+            dbms_output.put_line(registrationstatus);
+            if registrationstatus = 0 then
+                dbms_output.put_line('waitlisted');
+                update student_registration set reg_status=2 where stid = student_id 
+                and sch_id = sche_id;
+                select pos into p from waitlist where stid = student_id and sch_id = sche_id;
+                dbms_output.put_line('waitid :' || p);
+                delete from waitlist where stid = student_id and sch_id = sche_id;
+                update waitlist set pos = pos - 1 where pos > p;
+            elsif (registrationstatus = 1) then
+                dbms_output.put_line('enrolled');
+				select pos into p from waitlist where stid = student_id and sch_id = sche_id;
+                dbms_output.put_line('waitid :' || p);
+                delete from waitlist where stid = student_id and sch_id = sche_id;
+                update waitlist set pos = pos - 1 where pos > p;   
+            end if;  
+        end if;
+    end if;
+end;
+/
+--- normal case, before 4 hours
+Set SERVEROUTPUT on;
+exec compu(2, 3);
+
+/
+
+-- Feature 14
+set serveroutput on;
+Create or replace procedure student_print_course_schedule(st_id in number,y in date,semester in number)
+Is
+cursor c1 is select c.cid,c.cname,s.sect_id,sr.reg_status,w.pos 
+from course c,student_registration sr, waitlist w, schedule s, student st
+where c.cid=s.cid and
+s.sch_id=sr.sch_id and s.sch_id=w.sch_id and 
+s.year=y and s.semester=semester and st.stid = st_id;
+courseid course.cid%type;
+coursename course.cname%type;
+sect_id sections.sect_id%type;
+status student_registration.reg_status%type;
+wait_pos  waitlist.pos%type;
+begin 
+  open c1;
+  loop
+    fetch c1 into courseid,coursename,sect_id,status,wait_pos;
+    exit when c1%notfound;
+    if wait_pos = 0 then
+    dbms_output.put_line('courseID : '||courseid||' coursename : '||
+    coursename||' sections : '||sect_id||
+    ' status for course : '||status);
+    else
+    dbms_output.put_line('courseID : '||courseid||' coursename : '||
+    coursename||' sections : '||sect_id||
+    ' status for course : '||status || ' waitlist position is : ' ||wait_pos || '');
+    end if;
+    end loop;
+    close c1;
+    end;
+/
+exec student_print_course_schedule(1,date'2019-08-28',1);
+
+/
+
+-- Feature 15
+
+
+set serveroutput on;
+Create or replace procedure g_student(input_did IN number, input_year IN date, input_semester IN number)
+IS
+--Fetching data for all department courses having status enrolled and waitlisted
+cursor c1 is select c.no_of_sections,c.cid,c.cname,sch.sect_id,count(reg_status) 
+              from schedule sch,course c,program p,department d,waitlist wl,student_registration r
+              where sch.cid=c.cid and p.pid=c.pid and p.did=d.did and sch.sch_id=wl.sch_id and 
+              sch.sch_id=r.sch_id and r.stid=wl.stid and year=input_year and semester=input_semester and 
+			  r.reg_status in (1,0)and d.did=input_did group by c.no_of_sections,c.cid,c.cname,sch.sect_id;
+v_total_courses int;
+total_stu student.stid%type;
+no_sec course.no_of_sections%type;
+c_id course.cid%type;
+c_name course.cname%type;
+se_id schedule.sect_id%type;
+course_count int;
+v_count int;
+begin
+ select count(*) into v_count from department where did=input_did;
+  if v_count=0 then
+   dbms_output.put_line('Invalid department ID.'); -- Checking condition for invalid department ID
+  else 
+  --Getting total students who are enrolled or waitlisted in a given department
+    select count(r.stid) into total_stu from schedule sch,course c,program p,department d,student_registration r,waitlist wl
+    where sch.cid=c.cid and p.pid=c.pid and p.did=d.did  and  sch.sch_id=wl.sch_id and r.stid=wl.stid and
+    sch.sch_id=r.sch_id and r.reg_status =1 and sch.year=input_year and sch.semester=input_semester and d.did=input_did having count(*)>=1;
+	dbms_output.put_line('Total number of students enrolled to at least one course for year : '||input_year||' and semester : '||input_semester||' is '||total_stu);
+      open c1;
+	    select count(c.cid) as total_cour into v_total_courses from course c,program p,department d,schedule sch
+        where c.pid=p.pid and d.did=p.did and sch.cid=c.cid and year=input_year and semester=input_semester;
+        loop 
+    		 fetch c1 into no_sec,c_id,c_name,se_id,course_count;
+    		 exit when c1%notfound;
+    		 dbms_output.put_line('Total number of courses is : '||v_total_courses|| ', course ID is :'||c_id||'course name is :'||c_name||
+    		  ', section ID is : '||se_id||', number students in enrolled or waitlist status is :'||course_count);
+		end loop;
+	end if;
+EXCEPTION -- Exception handling for no records
+WHEN no_data_found THEN
+    dbms_output.put_line('no data found');
+end;
+/
+
+--Checking invalid department
+exec g_student(1, date '2019-08-28',1);
+
+/
+
+-- Feature 16
+set serveroutput on;
+create or replace procedure identify_k(v_year schedule.year%type, v_sem schedule.semester%type, 
+k in schedule.wait_list_capacity%type)
+is
+cursor c1 is select min(sc.rid),min(sc.tid)
+from schedule sc
+where sc.year = v_year and sc.semester = v_sem and sc.wait_list_capacity = k
+group by rid,tid;
+cursor c2 is select sc.rid, cr.rname, sc.wait_list_capacity from schedule sc, classroom cr where 
+sc.rid = cr.rid and sc.year = v_year and sc.semester = v_sem and sc.wait_list_capacity = k;
+cursor c3 is select tb.tid,tb.day1,tb.day2,tb.start_time
+from schedule sc,timeblock tb
+where sc.tid = tb.tid and sc.year = v_year and sc.semester = v_sem and sc.wait_list_capacity = k;
+
+v_minrid integer;
+v_mintid integer;
+v_a integer;
+v_rn varchar(60);
+v_sec integer;
+v_d1 integer;
+v_d2 integer;
+v_count integer;
+begin
+open c1;
+loop
+fetch c1 into v_minrid, v_mintid;
+exit when c1%notfound;
+end loop;
+select rid into v_count from schedule where year = v_year and semester = v_sem and 
+wait_list_capacity = k;
+   --checks the condition when room has no class schedule
+   if v_count != 0 then 
+for i in c2
+loop
+v_a := i.rid;
+v_rn := i.rname;
+dbms_output.put_line('room id= ' || v_a || ' room name= ' || v_rn
+|| ' waiting list length= ' || i.wait_list_capacity);
+end loop;
+select sect_id into v_sec from schedule where schedule.year = v_year and 
+schedule.semester = v_sem and schedule.wait_list_capacity = k; --prints out the room id,room name and schedule sections
+dbms_output.put_line('room id= '|| v_a || ' room name=' || v_rn || ' Number of schedule class sections=' || v_sec);
+else
+dbms_output.put_line('invalid room id');
+end if;
+select tb.day1, tb.day2 into v_d1, v_d2 from timeblock tb, schedule sc where 
+sc.tid = tb.tid and sc.year = v_year and sc.semester = v_sem and sc.wait_list_capacity = k;
+if v_d1 = NULL and v_d2 = NULL then    --checks the condition when the time block has no class schedule
+dbms_output.put_line(' invalid time block id');
+else
+for j in c3
+loop
+dbms_output.put_line('tid= ' || j.tid || ' day1 = ' || j.day1 || ' day2= ' || j.day2  || ' start_time= ' || j.start_time);
+end loop;
+end if;
+exception
+when no_data_found then
+dbms_output.put_line('no data found');
+end;
+/
+exec identify_k(date '2020-01-28', 3, 8);
+/
